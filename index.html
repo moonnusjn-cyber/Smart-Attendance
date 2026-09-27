@@ -384,18 +384,52 @@
         "ثانية حادي عشر (فيزياء)": ["إبراهيم حسن علي", "محمد أحمد محمود", "يوسف حسن إبراهيم"]
     };
  
-    let activeGrade = "";
+   let activeGrade = "";
     let activeClass = "";
     let generalDefaultNames = ["أحمد محمد إبراهيم", "محمود حسن علي", "يوسف أحمد السيد", "إسلام خالد عبد الله", "عمر محمود حسن", "كريم محمد عبد السلام"];
     
     let studentStatusMap = {};
     let globalArchive = [];
 
+    // دالة الحفظ المحلي المحدثة لضمان حفظ الأرشيف والحالات بانتظام
+    function saveAttendanceToLocal() {
+        try {
+            const dataToSave = {
+                archive: globalArchive,
+                statuses: studentStatusMap,
+                lastActiveGrade: activeGrade,
+                lastActiveClass: activeClass,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('schoolAttendanceArchive', JSON.stringify(dataToSave));
+        } catch (error) {
+            console.error("خطأ أثناء حفظ البيانات:", error);
+        }
+    }
+
+    // استرجاع البيانات المحفوظة تلقائياً عند فتح الصفحة وتحديث الجدول
     window.onload = function() {
         let savedData = localStorage.getItem('schoolAttendanceArchive');
         if (savedData) {
-
-    }
+            try {
+                let parsedData = JSON.parse(savedData);
+                if (parsedData.archive) {
+                    globalArchive = parsedData.archive;
+                    refreshArchiveTable(globalArchive);
+                }
+                if (parsedData.statuses) {
+                    studentStatusMap = parsedData.statuses;
+                }
+                if (parsedData.lastActiveGrade) {
+                    activeGrade = parsedData.lastActiveGrade;
+                }
+                if (parsedData.lastActiveClass) {
+                    activeClass = parsedData.lastActiveClass;
+                }
+            } catch (e) {
+                console.error("فشل تحليل البيانات المخزنة:", e);
+            }
+        }
     }
     
 
@@ -457,6 +491,7 @@
         
         renderStudentCards(names);
         changeSection('studentsSec');
+        saveAttendanceToLocal();
     }
 
     function renderStudentCards(names) {
@@ -492,6 +527,7 @@
             presBtn.className = 'unselected';
             absBtn.className = 'absent';
         }
+        saveAttendanceToLocal();
     };
 
     function saveAndArchive() {
@@ -522,7 +558,8 @@
             });
         });
 
-        localStorage.setItem('schoolAttendanceArchive', JSON.stringify(globalArchive));
+        // استدعاء دالة الحفظ الدائم لتحديث التخزين المحلي فوراً
+        saveAttendanceToLocal();
 
         alert("تم اعتماد وتوثيق الغياب وحفظه في المتصفح بنجاح! 🎉");
         refreshArchiveTable(globalArchive);
@@ -560,9 +597,7 @@
         }
     }
 
-      
-
-      function searchArchive() {
+    function searchArchive() {
         let queryInput = document.getElementById('searchInput');
         if(!queryInput) return;
         let query = queryInput.value.trim();
@@ -591,6 +626,31 @@
         if(totalCountElem) totalCountElem.textContent = filtered.length;
         if(statsBoxElem) statsBoxElem.style.display = "block";
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </script>
