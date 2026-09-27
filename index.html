@@ -601,14 +601,19 @@
         let queryInput = document.getElementById('searchInput');
         if(!queryInput) return;
         let query = queryInput.value.trim();
+        
+        let statsBoxElem = document.getElementById('studentStatsBox');
+
         if(query === "") {
-            let statsBox = document.getElementById('studentStatsBox');
-            if(statsBox) statsBox.style.display = "none";
+            if(statsBoxElem) statsBoxElem.style.display = "none";
             refreshArchiveTable(globalArchive);
             return;
         }
 
-        let filtered = globalArchive.filter(item => item.name.includes(query));
+        // فلترة الأرشيف بناءً على اسم الطالب المطابق لكلمة البحث
+        let filtered = globalArchive.filter(item => item.name && item.name.includes(query));
+        
+        // تحديث جدول الأرشيف بالنتائج المفلترة فقط لتظهر البيانات بدقة
         refreshArchiveTable(filtered);
 
         let presentCount = filtered.filter(item => item.status === 'حاضر').length;
@@ -618,16 +623,14 @@
         let presCountElem = document.getElementById('presentDaysCount');
         let absCountElem = document.getElementById('absentDaysCount');
         let totalCountElem = document.getElementById('totalDaysCount');
-        let statsBoxElem = document.getElementById('studentStatsBox');
 
         if(statsNameElem) statsNameElem.textContent = `إحصائيات الطالب: ${query}`;
         if(presCountElem) presCountElem.textContent = presentCount;
         if(absCountElem) absCountElem.textContent = absentCount;
         if(totalCountElem) totalCountElem.textContent = filtered.length;
+        
         if(statsBoxElem) statsBoxElem.style.display = "block";
     }
-
-
 
 
 
