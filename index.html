@@ -559,44 +559,49 @@
         });
 
         // استدعاء دالة الحفظ الدائم لتحديث التخزين المحلي فوراً
+        
+// دالة حفظ الغياب والتأكد من تسجيل الحالة الحقيقية (حاضر أو غائب) لكل طالب بدقة
+    function saveAndArchive() {
+        let cat = "";
+        let loc = activeClass;
+
+        if(activeGrade === 'الصف الأول الثانوي') {
+            cat = "قسم الأولى";
+        } else if(activeGrade === 'الصف الثاني الثانوي') {
+            cat = "قسم الثانية";
+        } else if(activeGrade === 'الصف الثالث الثانوي') {
+            cat = "قسم الثالثة";
+        }
+
+        let now = new Date();
+        let dayStr = `اليوم ${now.getDate()} (${now.toLocaleDateString('ar-EG')})`;
+        let timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+        let names = getStudentNamesList();
+        
+        // المرور على الطلاب وحفظ حالتهم كما اختارها المستخدم تماماً (بدون افتراضات أو عشوائية)
+        names.forEach(function(studentName, idx) {
+            let currentStatus = studentStatusMap[idx] || 'حاضر';
+            
+            globalArchive.unshift({
+                dayKey: dayStr,
+                category: cat,
+                location: loc,
+                name: studentName,
+                status: currentStatus, // حفظ الحالة الصحيحة (غائب يظل غايب، وحاضر يظل حاضر)
+                time: timeStr
+            });
+        });
+
+        // حفظ التغييرات في الذاكرة المحلية لضمان عدم ضياعها
         saveAttendanceToLocal();
 
-        alert("تم اعتماد وتوثيق الغياب وحفظه في المتصفح بنجاح! 🎉");
+        alert("تم اعتماد وتوثيق الغياب وحفظه في المتصفح بدقة بدون أي عشوائية! 🎉");
         refreshArchiveTable(globalArchive);
         changeSection('archiveSec');
     }
 
-    function refreshArchiveTable(dataArray) {
-        let tbody = document.getElementById('archiveTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if(dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="color: #64748b;">لا توجد سجلات محفوظة بعد..</td></tr>`;
-            return;
-        }
-        dataArray.forEach(function(rec) {
-            let colorStyle = rec.status === 'حاضر' ? '#16a34a' : '#dc2626';
-            tbody.innerHTML += `
-                <tr>
-                    <td><b style="color: #d97706; background: #fef3c7; padding: 4px 10px; border-radius: 6px; display: inline-block;">📌 ${rec.dayKey}</b></td>
-                    <td><b style="color: #2563eb;">${rec.category}</b></td>
-                    <td>${rec.location}</td>
-                    <td><b>${rec.name}</b></td>
-                    <td><span style="color: ${colorStyle}; font-weight: bold;">${rec.status}</span></td>
-                    <td style="color: #64748b; font-size: 13px;">${rec.time}</td>
-                </tr>
-            `;
-        });
-    }
-
-    function clearArchive() {
-        if(confirm("هل أنت متأكد من مسح الأرشيف بالكامل؟")) {
-            globalArchive = [];
-            localStorage.removeItem('schoolAttendanceArchive');
-            refreshArchiveTable(globalArchive);
-        }
-    }
-
+    // دالة البحث المحدثة لإظهار إحصائيات الطالب وسجلاته التفصيلية بدقة داخل الجدول وخزنة البحث
     function searchArchive() {
         let queryInput = document.getElementById('searchInput');
         if(!queryInput) return;
@@ -610,10 +615,10 @@
             return;
         }
 
-        // فلترة الأرشيف بناءً على اسم الطالب المطابق لكلمة البحث
+        // فلترة الأرشيف بناءً على اسم الطالب المطابق لكلمة البحث فقط
         let filtered = globalArchive.filter(item => item.name && item.name.includes(query));
         
-        // تحديث جدول الأرشيف بالنتائج المفلترة فقط لتظهر البيانات بدقة
+        // تحديث جدول الأرشيف بالنتائج المفلترة الخاصة بالطالب حصراً
         refreshArchiveTable(filtered);
 
         let presentCount = filtered.filter(item => item.status === 'حاضر').length;
@@ -631,8 +636,6 @@
         
         if(statsBoxElem) statsBoxElem.style.display = "block";
     }
-
-
 
 
 
